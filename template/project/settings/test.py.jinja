@@ -1,0 +1,54 @@
+from typing import TypeVar
+
+from django.core.files.storage import InMemoryStorage
+from django.http import HttpRequest, HttpResponseBase
+from django.views.static import serve
+import readenv
+
+readenv.set("BASE_URL", "http://testserver")
+readenv.set("DATABASE_URL", "postgresql://{{ db_user }}:{{ db_password }}@db:5432/{{ db_name }}")
+readenv.set("DEBUG", "false")
+
+from project.settings.local import *  # noqa: E402,F401,F403
+
+CONSTANCE_CONFIG["ALLOW_ADMIN_LOGIN_VIA_PASSWORD"] = (  # noqa: F405
+    True,
+    *CONSTANCE_CONFIG["ALLOW_ADMIN_LOGIN_VIA_PASSWORD"][1:],  # noqa: F405
+)
+CONSTANCE_CONFIG["ALLOW_BACKOFFICE_LOGIN_VIA_PASSWORD"] = (  # noqa: F405
+    True,
+    *CONSTANCE_CONFIG["ALLOW_BACKOFFICE_LOGIN_VIA_PASSWORD"][1:],  # noqa: F405
+)
+
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+_HttpResponse = TypeVar("_HttpResponse", bound=HttpResponseBase)
+
+
+class InMemoryStoragePatched(InMemoryStorage):
+    def serve(self, request: HttpRequest, path: str) -> _HttpResponse:
+        from django.conf import settings
+
+        return serve(request, path, document_root=settings.MEDIA_ROOT)
+
+    def raw_exists(self, name: str) -> bool:
+        # Due to this change https://github.com/jschneier/django-storages/pull/1422
+        # (as reported issue https://github.com/mozilla/experimenter/issues/11570)
+        # we created this method to maintain the original behavior of exists before
+        # version 1.14.4 of django-storages
+        return self.exists(name)
+
+
+# Override static files settings for tests to avoid directory warnings
+STATIC_ROOT = None  # Disable static root for tests
+
+STORAGES = {
+    key: {**value, "BACKEND": "project.settings.test.InMemoryStoragePatched"}
+    for key, value in STORAGES.items()  # noqa: F405
+}

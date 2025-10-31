@@ -1,0 +1,28 @@
+"""
+Constance configuration file for project
+Put here only constance related settings.
+"""
+
+from django.utils.translation import gettext_lazy as _
+
+CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+CONSTANCE_SUPERUSER_ONLY = False
+CONSTANCE_ADDITIONAL_FIELDS = {}
+
+CONSTANCE_CONFIG_FIELDSETS = {
+    "AUTHENTICATION": [
+        "ALLOW_LOGIN_VIA_PASSWORD",
+    ],
+}
+
+CONSTANCE_CONFIG = {
+    "ALLOW_LOGIN_VIA_PASSWORD": (True, _("Abilita l'accesso ad Admin con username/password"), bool),
+}
+
+
+# keep always export_settings, constance_hidden_settings and __all__ as last items
+# constance_hidden_settings is merged into HIDDEN_SETTINGS and used by
+# {{ project_slug }}.core.views.debug.ExceptionReporterFilter
+export_settings = [key for key in locals() if key.isupper()]
+constance_hidden_settings = [key for key in export_settings if key.startswith("CONSTANCE_")]
+__all__ = export_settings + ["constance_hidden_settings"]

@@ -1,0 +1,237 @@
+# Copier template configuration
+# Based on: https://copier.readthedocs.io/
+
+_min_copier_version: "9.10.3"
+_templates_suffix: .jinja
+_subdirectory: template
+_skip_if_exists:
+  - "*.pyc"
+  - "__pycache__/"
+
+_jinja_extensions:
+  - jinja2_time.TimeExtension
+
+# Metadata
+_metadata:
+  version: "0.1.0"
+  license: "MIT"
+  author: "Raffaele Salmaso"
+
+# Project Type (determines smart defaults)
+project_type:
+  type: str
+  help: What type of project are you building?
+  choices:
+    Web App (Traditional web application): web
+    API (API-only backend): api
+    django-cms site: django-cms
+    Custom (Choose everything yourself): custom
+  default: web
+
+# Project Basics
+project_name:
+  type: str
+  help: What is your project name? (Human readable project name)
+  default: Project
+
+project_slug:
+  type: str
+  help: Python package name (slug)
+  default: "{{ project_name.lower().replace(' ', '_').replace('-', '_') }}"
+  validator: "{% if not project_slug.isidentifier() %}Must be valid Python identifier{% endif %}"
+
+project_description:
+  type: str
+  help: Project description (Human readable project brief description)
+  placeholder: Project description
+  validator: "{% if not project_description or project_description.strip() == '' %}Project description cannot be empty{% endif %}"
+
+# author_author:
+#   type: str
+#   help: Author name
+#   default: Raffaele Salmaso
+#   # placeholder: "Your Name"
+#
+# author_email:
+#   type: str
+#   help: Author email
+#   default: raffele@salmaso.org
+#   # placeholder: "your.email@example.com"
+
+# Tech Stack
+python_version:
+  type: str
+  help: Python version
+  choices:
+    - "3.14"
+    - "3.13"
+    - "3.12"
+  default: "3.14"
+
+database:
+  type: str
+  help: Database
+  choices:
+    PostgreSQL: postgresql
+    SQlite: sqlite
+  default: postgresql
+
+# cache:
+#   type: str
+#   help: Cache backend
+#   choices:
+#     Redis: redis
+#     None: none
+#   default: none
+
+# Computed values
+camel_case_app_name:
+  type: str
+  default: "{{ project_name|replace(' ', '') }}"
+  when: false
+
+upper_case_app_name:
+  type: str
+  default: "{{ project_name|upper|replace(' ', '_') }}"
+  when: false
+
+project_dir:
+  type: str
+  help: Project directory name
+  default: "_{{ project_name|lower|replace(' ', '-') }}"
+  when: false
+
+use_postgresql:
+  type: bool
+  help: Use PostgreSQL?
+  default: true
+  when: false
+
+# Database settings
+db_name:
+  type: str
+  help: Database name
+  default: "{{ project_name|lower|replace(' ', '_') }}"
+  when: false
+
+db_user:
+  type: str
+  help: Database user
+  default: "{{ project_name|lower|replace(' ', '_') }}"
+  when: false
+
+db_password:
+  type: str
+  help: Database password
+  secret: true
+  default: "{{ project_name|lower|replace(' ', '_') }}"
+  when: false
+
+# # Deployment
+# deployment_targets:
+#   type: str
+#   help: "Deployment targets (e.g., 'kubernetes,aws-ec2-ansible')"
+#   multiselect: true
+#   help: Deployment targets
+#   choices:
+#     Kubernetes (Helm + Kustomize): kubernetes
+#     Render: render
+#     Fly.io: flyio
+#     AWS ECS Fargate (Terraform): aws-ecs-fargate
+#     AWS EC2 (Ansible): aws-ec2-ansible
+#     Docker Compose: docker
+#   default: >-
+#     {%- if project_type == 'saas' -%}[kubernetes]
+#     {%- elif project_type == 'api' -%}[render]
+#     {%- elif project_type == 'web' -%}[flyio]
+#     {%- elif project_type == 'internal-tool' -%}[aws-ec2-ansible]
+#     {%- else -%}[kubernetes]{%- endif -%}
+
+
+# # Storage
+# media_storage:
+#   type: str
+#   help: Media file storage
+#   choices:
+#     Whitenoise (local): whitenoise
+#     S3: s3
+#   default: "whitenoise"
+
+# # Security
+# security_profile:
+#   type: str
+#   help: Security level
+#   choices:
+#     Standard: standard
+#     Strict: strict
+#   default: "standard"
+
+# Other settings
+language_code:
+  type: str
+  help: Language code
+  default: en-us
+  when: false
+
+timezone:
+  type: str
+  help: Timezone
+  default: Europe/Rome
+  when: false
+
+webapp_dir:
+  type: str
+  help: Web application directory
+  default: "/home/www/{{ project_dir }}"
+  when: false
+
+# Computed time values
+current_year:
+  type: str
+  default: "{% now 'local', '%Y' %}"
+  when: false
+
+use_djangorestframework:
+  type: bool
+  help: Use Django REST Framework?
+  default: >-
+    {%- if project_type == 'web' -%}false
+    {%- else -%}true{%- endif -%}
+
+use_sorl_thumbnail:
+  type: bool
+  help: Use sorl-thumbnail?
+  default: >-
+    {%- if project_type == 'web' -%}false
+    {%- else -%}true{%- endif -%}
+
+use_widget_tweaks:
+  type: bool
+  help: Use django-widget-tweaks?
+  default: >-
+    {%- if project_type == 'web' -%}true
+    {%- elif project_type == 'custom' -%}true
+    {%- else -%}false{%- endif -%}
+
+# Copy without rendering
+_skip_templating:
+  - "*.scss"
+  - "*.css"
+  - "*.less"
+  - "*.js"
+  - "etc/*"
+
+# Tasks (replaces hooks)
+_tasks:
+  # Post-generation task - run the Python script from template directory
+  - command: "uv run {{ _copier_conf.src_path }}/scripts/post_gen_project.py"
+    when: "{{ _stage == 'task' }}"
+  - git init
+  - git add .
+  - command: |
+      git commit -m "🎉 Initial commit
+
+      Project: {{ project_name }}
+      Description: {{ project_description }}
+      "
+

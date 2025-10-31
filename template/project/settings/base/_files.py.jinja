@@ -1,0 +1,32 @@
+import readenv.loads  # noqa: F401 isort:skip
+
+from ._paths import *  # noqa: F401,F403
+from ._paths import rel, var_rel
+
+MEDIA_URL = readenv.str("MEDIA_URL", "/media/")
+MEDIA_ROOT = readenv.str("MEDIA_ROOT", var_rel("media"))
+STATIC_URL = readenv.str("STATIC_URL", "/static/")
+STATIC_ROOT = readenv.str("STATIC_ROOT", var_rel("static"))
+
+# Additional locations of static files
+STATICFILES_DIRS = [
+    # Put strings here, like "/home/html/static" or "C:/www/django/static".
+    # Always use forward slashes, even on Windows.
+    # Don't forget to use absolute paths, not relative paths.
+    rel("{{ project_slug }}", "static"),
+]
+
+# List of finder classes that know how to find static files in
+# various locations.
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+]
+
+STORAGES = {
+    "default": readenv.str("DEFAULT_BACKEND_STORAGE", "fs://"),
+    "staticfiles": readenv.str("STATICFILES_BACKEND_STORAGE", "whitenoise+static://"),
+}
+FILE_UPLOAD_PERMISSIONS = 0o644
+
+__all__ = [key for key in locals() if key.isupper()]

@@ -1,0 +1,214 @@
+"""
+Django settings for {{ project_slug }} project.
+"""
+
+import readenv.loads  # noqa: F401 isort:skip
+
+from ._cache import *  # noqa: F401,F403
+from ._constance import *  # noqa: F401,F403{% if project_type == "django-cms" %}
+from ._cms import *  # noqa: F401,F403{% endif %}{% if use_djangorestframework %}
+from ._drf import *  # noqa: F401,F403{% endif %}
+from ._email import *  # noqa: F401,F403
+from ._files import *  # noqa: F401,F403
+from ._locale import *  # noqa: F401,F403
+from ._logging import *  # noqa: F401,F403
+from ._paths import *  # noqa: F401,F403
+from ._paths import rel
+from ._secrets import *  # noqa: F401,F403
+
+ENV = readenv.str("ENV", "")
+
+
+PROJECT_NAME = "{{ project_slug }}"
+
+DEBUG = readenv.bool("DEBUG", "false")
+DEFAULT_EXCEPTION_REPORTER_FILTER = readenv.str(
+    "DEFAULT_EXCEPTION_REPORTER_FILTER",
+    "{{ project_slug }}.core.views.debug.ExceptionReporterFilter",
+)
+
+ADMINS = [
+    # "Your Name <your_email@example.com>",
+]
+
+MANAGERS = ADMINS
+
+ALLOWED_HOSTS = readenv.list("ALLOWED_HOSTS", [], separator=",")
+
+# CSRF protection for HTTPS requests through reverse proxy
+CSRF_TRUSTED_ORIGINS = readenv.list("CSRF_TRUSTED_ORIGINS", [])
+
+SITE_ID = 1
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [
+            # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+            # Always use forward slashes, even on Windows.
+            # Don't forget to use absolute paths, not relative paths.
+            rel("{{ project_slug }}", "templates"),
+        ],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                # "django.template.context_processors.csrf",
+                "django.template.context_processors.debug",
+                "django.template.context_processors.i18n",
+                "django.template.context_processors.request",
+                "django.template.context_processors.tz",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",{% if project_type == "django-cms" %}
+                "cms.context_processors.cms_settings",{% endif %}
+                "sekizai.context_processors.sekizai",
+                "constance.context_processors.config",
+            ],
+            # "loaders": [
+            #     "django.template.loaders.filesystem.Loader",
+            #     "django.template.loaders.app_directories.Loader",
+            # ],
+            # "builtins": [
+            # ],
+        },
+    }
+]
+
+MIDDLEWARE = [
+    # "django.middleware.cache.UpdateCacheMiddleware",  # enable cache{% if project_type == "django-cms" %}
+    "cms.middleware.utils.ApphookReloadMiddleware",{% endif %}
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    # "django.middleware.http.ConditionalGetMiddleware",
+    # "django.middleware.gzip.GZipMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",{% if project_type == "django-cms" %}
+    "cms.middleware.user.CurrentUserMiddleware",
+    "cms.middleware.page.CurrentPageMiddleware",
+    "cms.middleware.toolbar.ToolbarMiddleware",
+    "cms.middleware.language.LanguageCookieMiddleware",{% endif %}
+    # "django.middleware.cache.FetchFromCacheMiddleware",  # enable cache
+    "allauth.account.middleware.AccountMiddleware",
+]
+INTERNAL_IPS = ["127.0.0.1"]
+
+ROOT_URLCONF = readenv.str("ROOT_URLCONF", "project.urls")
+# LOGIN_URL = reverse_lazy("login")
+# LOGOUT_URL = reverse_lazy("logout")
+# LOGIN_REDIRECT_URL = "/"  # "/accounts/profile/"
+AUTH_USER_MODEL = "accounts.User"
+AUTHENTICATION_BACKENDS = readenv.list(
+    "AUTHENTICATION_BACKENDS",
+    [
+        "django.contrib.auth.backends.ModelBackend",
+        "allauth.account.auth_backends.AuthenticationBackend",
+    ],
+    separator=",",
+)
+ACCOUNTS_ALLOWED_USER_EMAILS = readenv.list("ACCOUNTS_ALLOWED_USER_EMAILS", [], separator=",")
+ACCOUNTS_ALLOWED_DOMAINS = readenv.list("ACCOUNTS_ALLOWED_DOMAINS", [], separator=",")
+
+# Python dotted path to the ASGI application used by Django's runserver.
+ASGI_APPLICATION = readenv.str("ASGI_APPLICATION", "project.asgi.application")
+
+# Python dotted path to the WSGI application used by Django's runserver.
+WSGI_APPLICATION = readenv.str("WSGI_APPLICATION", "project.wsgi.application")
+
+INSTALLED_APPS = [
+    "{{ project_slug }}.accounts.apps.AccountsConfig",
+    # "{{ project_slug }}.healthcheck.apps.HealthConfig",
+    # "{{ project_slug }}.apps.{{ camel_case_app_name }}Config",
+    "{{ project_slug }}.core.apps.{{ camel_case_app_name }}Config",
+    {% if use_postgresql %}"django.contrib.postgres.apps.PostgresConfig",
+    {% endif %}"django.contrib.auth.apps.AuthConfig",
+    "django.contrib.contenttypes.apps.ContentTypesConfig",
+    "django.contrib.sessions.apps.SessionsConfig",
+    "django.contrib.sites.apps.SitesConfig",
+    "django.contrib.messages.apps.MessagesConfig",
+    # "django.contrib.staticfiles.apps.StaticFilesConfig",
+    "project.apps.StaticFilesConfig",
+    "whitenoise.runserver_nostatic",
+    "{{ project_slug }}.admin.apps.AdminConfig",
+    "project.apps.AdminConfig",
+    "project.apps.ConstanceConfig",
+    "allauth",
+    "allauth.account.apps.AccountConfig",
+    "allauth.socialaccount.apps.SocialAccountConfig",
+    "allauth.socialaccount.providers.google",{% if use_sorl_thumbnail %}
+    "sorl.thumbnail",{% endif %}{% if use_djangorestframework %}
+    "rest_framework",
+    "rest_framework.authtoken",{% endif %}
+    # "classytags",
+    # "sekizai",
+    "project.apps.ClassyTagsConfig",
+    "project.apps.SekizaiConfig",{% if use_widget_tweaks or project_type == "django-cms" %}
+    # widget_tweaks
+    "project.apps.WidgetTweaksConfig",{% endif %}{% if project_type == "django-cms" %}
+    "treebeard",
+    "djangocms_text_ckeditor", # note this needs to be above the "cms" entry
+    "menus.apps.MenusConfig",
+    "easy_thumbnails",
+    "formtools",
+    "cms.apps.CMSConfig",
+    "djangocms_column",
+    "djangocms_file",
+    "djangocms_googlemap",
+    "djangocms_link",
+    "djangocms_picture",
+    "djangocms_style",
+    "djangocms_video",
+    "filer",{% endif %}
+    "django_tasks",
+    "django_tasks.backends.database",
+]
+
+TASKS = {
+    "default": readenv.str("TASKS_URL", "database+dt://"),
+}
+
+#######################
+# Password validation #
+#######################
+
+# AUTH_PASSWORD_VALIDATORS = [
+#     {
+#         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+#     },
+#     {
+#         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+#     },
+#     {
+#         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+#     },
+#     {
+#         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+#     },
+# ]
+
+
+SILENCED_SYSTEM_CHECKS = []
+
+########################
+# DJANGO DEBUG TOOLBAR #
+########################
+
+DEBUG_TOOLBAR_CONFIG = {
+    "INTERCEPT_REDIRECTS": False,
+    "HIDE_DJANGO_SQL": False,
+    "ENABLE_STACKTRACES": True,
+}
+
+HIDDEN_SETTINGS = sorted(
+    set(
+        [
+            *cache_hidden_settings,  # noqa: F405
+            *constance_hidden_settings,  # noqa: F405
+            *email_hidden_settings,  # noqa: F405
+            *secret_hidden_settings,  # noqa: F405
+        ]
+    )
+)

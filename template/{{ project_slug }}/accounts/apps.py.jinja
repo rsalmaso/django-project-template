@@ -1,0 +1,11 @@
+from django.apps import AppConfig
+
+
+class AccountsConfig(AppConfig):
+    name = "{{ project_slug }}.accounts"
+
+    def setup(self) -> None:
+        from allauth.account.decorators import secure_admin_login
+        from django.contrib import admin
+
+        admin.site.login = secure_admin_login(admin.site.login)

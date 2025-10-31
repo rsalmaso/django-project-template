@@ -1,0 +1,21 @@
+from typing import Any
+
+from django.contrib.admin import sites
+from django.http import HttpRequest, HttpResponse
+from django.utils.decorators import method_decorator
+from django.utils.translation import gettext_lazy as _
+from django.views.decorators.cache import never_cache
+
+
+class AdminSite(sites.AdminSite):
+    site_title = _("{{ camel_case_app_name }} site admin")
+    site_header = _("{{ camel_case_app_name }} administration")
+    index_title = _("{{ camel_case_app_name }} site administration")
+
+    @method_decorator(never_cache)
+    def login(self, request: HttpRequest, extra_context: dict[Any, Any] | None = None) -> HttpResponse:
+        context = {
+            "allow_login_via_password": True,  # config.ALLOW_ADMIN_LOGIN_VIA_PASSWORD,
+        }
+        context.update(extra_context or {})
+        return super().login(request, extra_context=context)
