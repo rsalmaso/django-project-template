@@ -1,0 +1,11 @@
+from django.apps import AppConfig
+from django.utils.module_loading import import_module
+
+
+class AdminConfig(AppConfig):
+    name = "{{ project_slug }}.admin"
+    label = "{{ project_slug }}_admin"
+    verbose_name = "{{ project_slug }} Admin"
+
+    def ready(self):
+        import_module("{{ project_slug }}.admin.views")

@@ -1,0 +1,16 @@
+import os
+
+from django.apps import AppConfig
+from django.conf import settings
+from django.utils.translation import gettext_lazy as _
+
+
+class {{ camel_case_app_name }}Config(AppConfig):
+    name = "{{ project_slug }}.core"
+    verbose_name = _("{{ camel_case_app_name }}")
+
+    def ready(self):
+        # make sure these dirs exist
+        for setting in ("LOG_DIR", "MEDIA_ROOT", "STATIC_ROOT", "EMAIL_FILE_PATH"):
+            if path := getattr(settings, setting, None):
+                os.makedirs(path, exist_ok=True)

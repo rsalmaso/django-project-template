@@ -1,0 +1,52 @@
+line-length = 120
+target-version = "py{{ python_version.replace('.', '') }}"
+
+[lint]
+select = [
+    "B", # flake8-bugbear
+    "C9", # mccabe
+    "DJ", # flake8-django
+    "E", # pycodestyle
+    "F", # pyflakes
+    "I", #
+    "W", # pycodestyle
+
+]
+ignore = [
+    "B904", # Within an except clause, raise exceptions with raise ... from err or raise ... from None to
+            # distinguish them from errors in exception handling.
+    "E722", # Do not use bare except, specify exception instead
+]
+fixable = [
+    "I",
+]
+unfixable = [
+    "F401", # don't remove unused import
+]
+
+[lint.flake8-quotes]
+inline-quotes = "double"
+
+[format]
+indent-style = "space"
+line-ending = "lf"
+quote-style = "double"
+
+[lint.isort]
+combine-as-imports = true
+force-sort-within-sections = true
+force-wrap-aliases = true
+known-first-party = [
+    "{{ project_slug }}",
+]
+known-third-party = [
+    "django",
+    "sentry_sdk",
+]
+order-by-type = false
+
+[lint.mccabe]
+max-complexity = 18
+
+[lint.per-file-ignores]
+"{{ project_slug }}/*/migrations/*.py" = ["E501"]

@@ -1,0 +1,42 @@
+from constance.apps import ConstanceConfig as BaseConstanceConfig
+from django.apps import AppConfig
+from django.contrib.admin.apps import AdminConfig as DjangoAdminConfig
+from django.contrib.staticfiles.apps import StaticFilesConfig as BaseStaticFilesConfig
+from django.utils.translation import gettext_lazy as _
+
+
+class AdminConfig(DjangoAdminConfig):
+    default_site = "{{ project_slug }}.admin.sites.AdminSite"
+
+
+class StaticFilesConfig(BaseStaticFilesConfig):
+    ignore_patterns = BaseStaticFilesConfig.ignore_patterns + [
+        "scss",
+        "*.scss",
+        "less",
+        "*.less",
+        "*-",
+        "*.bak",
+        "*.orig",
+        ".hg",
+        ".git",
+    ]
+
+
+class ClassyTagsConfig(AppConfig):
+    name = "classytags"
+    verbose_name = _("Classy Tags")
+
+
+class ConstanceConfig(BaseConstanceConfig):
+    default_auto_field = "django.db.models.AutoField"
+
+
+class SekizaiConfig(AppConfig):
+    name = "sekizai"
+    verbose_name = _("Sekizai")
+
+
+class WidgetTweaksConfig(AppConfig):
+    name = "widget_tweaks"
+    verbose_name = _("Widget Tweaks")
