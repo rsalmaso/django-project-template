@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import readenv.loads  # noqa: F401 isort:skip
+import readenv.loads
+
 import django_service_urls.loads  # noqa: F401 isort:skip
 
 import sys
